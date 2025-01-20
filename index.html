@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Cost Average Calculator</title>
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --primary-hover: #4f46e5;
+            --secondary-color: #14b8a6;
+            --secondary-hover: #0d9488;
+            --background: #f8fafc;
+            --card-bg: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--background);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .calculator {
+            background-color: var(--card-bg);
+            width: 100%;
+            max-width: 600px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            padding: 2rem;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--text-primary);
+            font-size: 1.875rem;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+        }
+
+        h2 {
+            color: var(--text-primary);
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            background-color: var(--background);
+            padding: 0.375rem;
+            border-radius: 0.75rem;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: none;
+            background-color: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .tab-button.active {
+            background-color: var(--card-bg);
+            color: var(--primary-color);
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+        }
+
+        .calculator-form {
+            display: none;
+        }
+
+        .calculator-form.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .input-group {
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            color: var(--text-primary);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        button {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .result {
+            margin-top: 1.5rem;
+            padding: 1.25rem;
+            background-color: var(--background);
+            border-radius: 0.75rem;
+            display: none;
+            animation: slideUp 0.3s ease;
+        }
+
+        .result h3 {
+            color: var(--text-primary);
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .result p {
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+            font-size: 0.975rem;
+        }
+
+        .result p:last-child {
+            margin-bottom: 0;
+        }
+
+        .highlight {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .calculator {
+                padding: 1.5rem;
+            }
+
+            .tab-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <h1>Crypto Calculator</h1>
+        
+        <div class="tab-buttons">
+            <button class="tab-button active" onclick="showCalculator('new-average')">Calculate New Average</button>
+            <button class="tab-button" onclick="showCalculator('target-average')">Calculate Required Quantity</button>
+        </div>
+
+        <!-- New Average Calculator -->
+        <div id="new-average-calc" class="calculator-form active">
+            <h2>New Average Cost</h2>
+            <div class="input-group">
+                <label>Current Quantity</label>
+                <input type="number" id="current-quantity" step="any" placeholder="Enter your current holdings" required>
+            </div>
+            <div class="input-group">
+                <label>Current Average Cost ($)</label>
+                <input type="number" id="current-avg-cost" step="any" placeholder="Enter your current average cost" required>
+            </div>
+            <div class="input-group">
+                <label>New Purchase Quantity</label>
+                <input type="number" id="new-quantity" step="any" placeholder="Enter quantity to purchase" required>
+            </div>
+            <div class="input-group">
+                <label>Current Market Price ($)</label>
+                <input type="number" id="new-price" step="any" placeholder="Enter current market price" required>
+            </div>
+            <button onclick="calculateNewAverage()">Calculate Average</button>
+            <div id="new-average-result" class="result"></div>
+        </div>
+
+        <!-- Target Average Calculator -->
+        <div id="target-average-calc" class="calculator-form">
+            <h2>Target Average Calculator</h2>
+            <div class="input-group">
+                <label>Current Quantity</label>
+                <input type="number" id="target-current-quantity" step="any" placeholder="Enter your current holdings" required>
+            </div>
+            <div class="input-group">
+                <label>Current Average Cost ($)</label>
+                <input type="number" id="target-current-avg-cost" step="any" placeholder="Enter your current average cost" required>
+            </div>
+            <div class="input-group">
+                <label>Target Average Cost ($)</label>
+                <input type="number" id="target-avg-cost" step="any" placeholder="Enter your target average" required>
+            </div>
+            <div class="input-group">
+                <label>Current Market Price ($)</label>
+                <input type="number" id="target-new-price" step="any" placeholder="Enter current market price" required>
+            </div>
+            <button onclick="calculateRequiredQuantity()">Calculate Quantity</button>
+            <div id="target-average-result" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        function showCalculator(type) {
+            document.querySelectorAll('.calculator-form').forEach(form => form.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(tab => tab.classList.remove('active'));
+            
+            document.getElementById(`${type}-calc`).classList.add('active');
+            event.target.classList.add('active');
+            
+            document.querySelectorAll('.result').forEach(result => result.style.display = 'none');
+        }
+
+        function calculateNewAverage() {
+            const currentQuantity = parseFloat(document.getElementById('current-quantity').value);
+            const currentAvgCost = parseFloat(document.getElementById('current-avg-cost').value);
+            const newQuantity = parseFloat(document.getElementById('new-quantity').value);
+            const newPrice = parseFloat(document.getElementById('new-price').value);
+
+            if (!currentQuantity || !currentAvgCost || !newQuantity || !newPrice) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            const totalCost = (currentQuantity * currentAvgCost) + (newQuantity * newPrice);
+            const totalQuantity = currentQuantity + newQuantity;
+            const newAverage = totalCost / totalQuantity;
+
+            const result = document.getElementById('new-average-result');
+            result.innerHTML = `
+                <h3>Results</h3>
+                <p>New Average Cost: <span class="highlight">$${newAverage.toFixed(3)}</span></p>
+                <p>Total Quantity: <span class="highlight">${totalQuantity.toFixed(3)}</span></p>
+                <p>Total Investment: <span class="highlight">$${totalCost.toFixed(2)}</span></p>
+            `;
+            result.style.display = 'block';
+        }
+
+        function calculateRequiredQuantity() {
+            const currentQuantity = parseFloat(document.getElementById('target-current-quantity').value);
+            const currentAvgCost = parseFloat(document.getElementById('target-current-avg-cost').value);
+            const targetAvgCost = parseFloat(document.getElementById('target-avg-cost').value);
+            const newPrice = parseFloat(document.getElementById('target-new-price').value);
+
+            if (!currentQuantity || !currentAvgCost || !targetAvgCost || !newPrice) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            if (newPrice >= targetAvgCost) {
+                const result = document.getElementById('target-average-result');
+                result.innerHTML = '<p style="color: #ef4444; font-weight: 500;">Cannot achieve target average - current price is too high!</p>';
+                result.style.display = 'block';
+                return;
+            }
+
+            const quantityNeeded = (currentQuantity * (currentAvgCost - targetAvgCost)) / (targetAvgCost - newPrice);
+            const totalCost = quantityNeeded * newPrice;
+            const finalQuantity = currentQuantity + quantityNeeded;
+
+            const result = document.getElementById('target-average-result');
+            result.innerHTML = `
+                <h3>Results</h3>
+                <p>Quantity to Buy: <span class="highlight">${quantityNeeded.toFixed(3)}</span></p>
+                <p>Required Investment: <span class="highlight">$${totalCost.toFixed(2)}</span></p>
+                <p>Final Quantity: <span class="highlight">${finalQuantity.toFixed(3)}</span></p>
+            `;
+            result.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
